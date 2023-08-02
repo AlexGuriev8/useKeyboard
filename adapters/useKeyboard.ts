@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useCallback, useRef, useSyncExternalStore } from "react";
 
-import { addCallback } from '../core';
-import { Callback, WrappedCallback, Key } from '../types';
+import { addCallback } from "../core";
+import { Callback, WrappedCallback, Key } from "../types";
 
 type Props = {
   key: Key;
@@ -14,18 +14,16 @@ export const useKeyboard = ({ key, callback, disabled = false }: Props) => {
 
   wrappedCallback.current = { callback };
 
-  const removeCallback = useMemo(() => {
-    if (disabled) {
-      return null;
-    }
+  const subscribe = useCallback(() => {
+    if (disabled) return () => null;
 
-    return addCallback({
+    const removeCallback = addCallback({
       key,
       wrappedCallback,
     });
+
+    return removeCallback;
   }, [key, disabled]);
 
-  useEffect(() => {
-    if (removeCallback) return removeCallback;
-  }, [removeCallback]);
+  useSyncExternalStore(subscribe, () => null);
 };
